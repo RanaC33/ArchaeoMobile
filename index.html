@@ -52,19 +52,36 @@
       });
 
       // Simple AI logic for kids
-      function sendMessage() {
+     function sendMessage() {
         const input = document.getElementById('user-input');
         const text = input.value.toLowerCase();
         if(!text) return;
 
-        let response = "That is a great question! I am almost 2,000 years old, so I might have forgotten the answer, but I was the biggest arena in Rome!";
+        // Default friendly answer
+        let response = "That's a cool question! I'm a giant stone arena from Ancient Rome. I've been standing for almost 2,000 years!";
 
-        if(text.includes("how many")) response = "I could hold over 50,000 people! That is like a modern football stadium!";
-        if(text.includes("gladiator")) response = "Yes! Brave gladiators fought here to show their strength. It was very loud!";
-        if(text.includes("who built")) response = "The Emperor Vespasian started my construction as a gift to the Roman people.";
+        // Specific Kid-Friendly Answers
+        if(text.includes("how many") || text.includes("big") || text.includes("people")) {
+          response = "I am HUGE! Over 50,000 people could fit inside me. That is like filling up a massive football stadium!";
+        } 
+        else if(text.includes("gladiator") || text.includes("fight")) {
+          response = "Yes! Gladiators were like the action heroes of Rome. they wore heavy armor and fought right here in my center!";
+        } 
+        else if(text.includes("old") || text.includes("age") || text.includes("when")) {
+          response = "I am super old! Romans started building me in the year 70 AD. That's way before your great-great-great grandparents were born!";
+        }
+        else if(text.includes("animal") || text.includes("lion")) {
+          response = "Believe it or not, I even had lions and elephants here! They stayed in secret rooms under the floor.";
+        }
+        else if(text.includes("free") || text.includes("ticket")) {
+          response = "Fun fact: Back in Rome, the shows here were usually FREE! The Emperor wanted everyone to come and have fun.";
+        }
 
-        history.innerHTML += `<br><br><b>You:</b> ${input.value}<br><span class="ai-name">Colosseum:</span> "${response}"`;
+        // Update the screen
+        history.innerHTML += `<br><br><b style="color:blue">You:</b> ${input.value}<br><span class="ai-name">Colosseum:</span> "${response}"`;
         input.value = "";
+        
+        // Auto-scroll so kids can see the new message
         history.scrollTop = history.scrollHeight;
       }
     </script>
