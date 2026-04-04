@@ -8,22 +8,30 @@
       body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
       #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
       #shutter-btn { width: 100px; height: 100px; background: #007bff; color: white; border: 5px solid white; border-radius: 50%; margin-bottom: 40px; cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-      #timer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: none; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; font-size: 24px; }
-      #ai-card { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; background: white; padding: 15px; border-radius: 15px; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1001; pointer-events: auto; border: 3px solid #f1c40f; }
-      .tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #ddd; }
-      .tab-link { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; padding: 10px; }
-      .tab-link.active { color: #007bff; border-bottom: 3px solid #007bff; }
-      #chat-history { height: 140px; overflow-y: auto; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #eee; padding: 5px; background: #f9f9f9; border-radius: 5px; }
-      #user-input { width: 65%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+      #timer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; display: none; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; font-size: 24px; }
+      
+      #ai-card { 
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
+        width: 90%; max-width: 450px; background: white; padding: 15px; border-radius: 15px; 
+        display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1001; pointer-events: auto; border: 4px solid #f1c40f; 
+      }
+      
+      .tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #eee; }
+      .tab-link { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; padding: 10px; flex: 1; }
+      .tab-link.active { color: #007bff; border-bottom: 4px solid #007bff; }
+      
+      #chat-history { height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 14px; padding: 10px; background: #fdfdfd; border-radius: 10px; border: 1px solid #eee; line-height: 1.4; }
+      #user-input { width: 60%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
       .ai-name { font-weight: bold; color: #e67e22; }
-      #close-btn { position: absolute; top: 10px; right: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; }
+      .user-name { font-weight: bold; color: #3498db; }
+      #close-btn { position: absolute; top: -10px; right: -10px; background: #ff4d4d; color: white; border: 3px solid white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; }
     </style>
   </head>
   <body>
 
     <div id="timer-overlay">
-      <div id="status-text">LOCATING ARTIFACT...</div>
-      <div id="countdown-num" style="font-size: 80px; color: #f1c40f;"></div>
+      <div id="status-text">SYSTEM SCANNING...</div>
+      <div id="countdown-num" style="font-size: 90px; font-weight: bold; color: #f1c40f;"></div>
     </div>
 
     <div id="ui-layer">
@@ -32,20 +40,23 @@
 
     <div id="ai-card">
       <button id="close-btn" onclick="resetApp()">X</button>
+      
       <div class="tabs">
-        <button class="tab-link active" id="chat-tab-btn" onclick="showTab('chat')">AI CHAT</button>
-        <button class="tab-link" id="fact-tab-btn" onclick="showTab('facts')">FUN FACTS</button>
+        <button class="tab-link active" id="chat-tab-btn" onclick="showTab('chat')">ASK AI</button>
+        <button class="tab-link" id="fact-tab-btn" onclick="showTab('facts')">FACTS</button>
       </div>
 
       <div id="chat-section">
-        <div id="chat-history"><span class="ai-name">History AI:</span> "I am ready! Ask me where, when, or what happened here!"</div>
+        <div id="chat-history">
+          <span class="ai-name">AI:</span> "Scanning complete. I have the history files for this location. What would you like to know?"
+        </div>
         <div style="display:flex; gap:5px;">
-          <input type="text" id="user-input" placeholder="Ask a question...">
-          <button onclick="sendMessage()" style="background:#007bff; color:white; border:none; border-radius:8px; padding:10px; cursor:pointer;">ASK</button>
+          <input type="text" id="user-input" placeholder="Where? When? Built?">
+          <button onclick="sendMessage()" style="flex:1; background:#007bff; color:white; border:none; border-radius:8px; font-weight:bold;">ASK</button>
         </div>
       </div>
 
-      <div id="facts-section" style="display:none; font-size: 14px; line-height: 1.6;">
+      <div id="facts-section" style="display:none; font-size: 15px; line-height: 1.6;">
         <div id="dynamic-facts"></div>
       </div>
     </div>
@@ -54,11 +65,11 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity id="target0" mindar-image-target="targetIndex: 0">
-        <a-sphere radius="0.1" color="yellow" opacity="0.5"></a-sphere>
+        <a-sphere radius="0.1" color="yellow" opacity="0.6" animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 800; loop: true"></a-sphere>
       </a-entity>
       
       <a-entity id="target1" mindar-image-target="targetIndex: 1">
-        <a-sphere radius="0.1" color="green" opacity="0.5"></a-sphere>
+        <a-sphere radius="0.1" color="green" opacity="0.6"></a-sphere>
       </a-entity>
     </a-scene>
 
@@ -70,51 +81,48 @@
       const dynamicFacts = document.getElementById('dynamic-facts');
       const sceneEl = document.querySelector('a-scene');
 
-      let lastSeen = "colosseum"; // Default to Colosseum so it always works
+      let activeTarget = "colosseum"; // Defaulting to Colosseum
 
-      document.getElementById('target0').addEventListener("targetFound", () => { lastSeen = "colosseum"; });
-      document.getElementById('target1').addEventListener("targetFound", () => { lastSeen = "petra"; });
+      // Detection Sensors
+      document.getElementById('target0').addEventListener("targetFound", () => { activeTarget = "colosseum"; });
+      document.getElementById('target1').addEventListener("targetFound", () => { activeTarget = "petra"; });
 
       function startTimer() {
         overlay.style.display = "flex";
-        let timeLeft = 3;
-        countdownNum.innerText = timeLeft;
-        const interval = setInterval(() => {
-          timeLeft--;
-          countdownNum.innerText = timeLeft;
-          if (timeLeft <= 0) {
-            clearInterval(interval);
-            capture();
+        let count = 3;
+        countdownNum.innerText = count;
+        const timer = setInterval(() => {
+          count--;
+          countdownNum.innerText = count;
+          if (count <= 0) {
+            clearInterval(timer);
+            overlay.style.display = "none";
+            sceneEl.pause(); 
+            aiCard.style.display = "block";
+            document.getElementById('shutter-btn').style.display = "none";
+            updateFacts();
           }
         }, 1000);
       }
 
-      function capture() {
-        sceneEl.pause();
-        overlay.style.display = "none";
-        aiCard.style.display = "block";
-        document.getElementById('shutter-btn').style.display = "none";
-        updateFacts();
-      }
-
       function updateFacts() {
-        if(lastSeen === "colosseum") {
+        if(activeTarget === "colosseum") {
           dynamicFacts.innerHTML = `
-            <b>🏛️ Colosseum Quick Facts:</b>
-            <ul>
-              <li><b>Where:</b> Located in Rome, Italy.</li>
-              <li><b>When:</b> Built between 70 AD and 80 AD.</li>
-              <li><b>Used For:</b> Gladiatorial contests, animal hunts, and even mock sea battles!</li>
-              <li><b>Size:</b> It could hold over 50,000 spectators.</li>
+            <b>🏛️ Colosseum Report:</b>
+            <ul style="padding-left:20px; margin-top:10px;">
+              <li><b>Location:</b> Rome, Italy.</li>
+              <li><b>Built:</b> Finished in 80 AD.</li>
+              <li><b>Usage:</b> Gladiators played and fought here for 50,000 fans!</li>
+              <li><b>Special:</b> It could be filled with water for boat battles.</li>
             </ul>`;
         } else {
           dynamicFacts.innerHTML = `
-            <b>🏜️ Petra Quick Facts:</b>
-            <ul>
-              <li><b>Where:</b> Located in Ma'an, Jordan.</li>
-              <li><b>When:</b> Built around 400 BC.</li>
-              <li><b>Used For:</b> A capital city for the Nabataean kingdom and a major trade hub.</li>
-              <li><b>Feature:</b> Famous for its rock-cut architecture.</li>
+            <b>🏜️ Petra Report:</b>
+            <ul style="padding-left:20px; margin-top:10px;">
+              <li><b>Location:</b> Desert of Jordan.</li>
+              <li><b>Built:</b> Around 400 BC.</li>
+              <li><b>Usage:</b> A secret city and major trading post.</li>
+              <li><b>Feature:</b> Every building was carved into red rocks!</li>
             </ul>`;
         }
       }
@@ -128,33 +136,32 @@
       function showTab(tab) {
         document.getElementById('chat-section').style.display = tab === 'chat' ? "block" : "none";
         document.getElementById('facts-section').style.display = tab === 'facts' ? "block" : "none";
-        document.getElementById('chat-tab-btn').className = tab === 'chat' ? "tab-link active" : "tab-link";
-        document.getElementById('fact-tab-btn').className = tab === 'facts' ? "tab-link active" : "tab-link";
+        document.getElementById('chat-tab-btn').classList.toggle('active', tab === 'chat');
+        document.getElementById('fact-tab-btn').classList.toggle('active', tab === 'facts');
       }
 
       function sendMessage() {
         const input = document.getElementById('user-input');
-        const q = input.value.toLowerCase();
-        if(!q) return;
+        const msg = input.value.toLowerCase();
+        if(!msg) return;
 
-        let a = "I'm a history expert! Ask me specifically 'where', 'when', or 'what was it used for?'";
+        let reply = "";
 
-        // COLOSSEUM ANSWERS
-        if(lastSeen === "colosseum") {
-          if(q.includes("where")) a = "The Colosseum was built in the heart of Rome, Italy!";
-          else if(q.includes("when") || q.includes("built")) a = "Construction started in 70 AD under Emperor Vespasian and finished in 80 AD.";
-          else if(q.includes("gladiator") || q.includes("play") || q.includes("used for")) a = "It was used for gladiator battles, public spectacles, and theatre! They even flooded it for ship battles.";
-          else if(q.includes("how many") || q.includes("big")) a = "It's huge! It held up to 80,000 people.";
-        } 
-        // PETRA ANSWERS
-        else {
-          if(q.includes("where")) a = "Petra is hidden in the desert canyons of Jordan.";
-          else if(q.includes("when") || q.includes("built")) a = "It was built over 2,300 years ago, around 400 BC.";
-          else if(q.includes("used for")) a = "It was a massive trading city where people from all over the world met.";
+        if(activeTarget === "colosseum") {
+          if(msg.includes("where")) reply = "I am located in Rome, Italy, right in the center of the city!";
+          else if(msg.includes("when") || msg.includes("built")) reply = "Construction began in 72 AD and was finished by 80 AD. I'm nearly 2,000 years old!";
+          else if(msg.includes("gladiator") || msg.includes("play") || msg.includes("used")) reply = "Gladiators 'played' and fought in my center arena. I was used for battles, animal hunts, and plays!";
+          else if(msg.includes("how many") || msg.includes("people")) reply = "I was built to hold over 50,000 people at once!";
+          else reply = "That's a great question about Roman history! I'm best at answering where, when, and how I was used.";
+        } else {
+          if(msg.includes("where")) reply = "I am located in the country of Jordan, hidden inside a deep canyon.";
+          else if(msg.includes("when") || msg.includes("built")) reply = "I was built over 2,300 years ago, starting around 400 BC.";
+          else if(msg.includes("used")) reply = "I was a thriving capital city for the Nabataean people!";
+          else reply = "I'm a marvel of the desert! Ask me about my location or when I was carved.";
         }
 
-        historyBox.innerHTML += `<div style="margin-top:10px;"><b>You:</b> ${input.value}</div>`;
-        historyBox.innerHTML += `<div><span class="ai-name">AI:</span> "${a}"</div>`;
+        historyBox.innerHTML += `<div style="margin-bottom:8px;"><span class="user-name">You:</span> ${input.value}</div>`;
+        historyBox.innerHTML += `<div style="margin-bottom:12px;"><span class="ai-name">AI:</span> "${reply}"</div>`;
         input.value = "";
         historyBox.scrollTop = historyBox.scrollHeight;
       }
