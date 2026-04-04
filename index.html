@@ -1,150 +1,171 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-      #museum-card {
-        position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-        width: 90%; background: white; border-radius: 20px; display: none;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; overflow: hidden;
-        border: 4px solid #f1c40f;
-      }
-      .tabs { display: flex; background: #f1c40f; }
-      .tab-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; background: #f1c40f; color: #2c3e50; font-size: 14px; }
-      .tab-btn.active { background: white; border-radius: 10px 10px 0 0; }
-      .content-section { padding: 15px; display: none; height: 180px; overflow-y: auto; }
-      .content-section.active { display: block; }
-      #chat-history { font-size: 14px; margin-bottom: 10px; line-height: 1.4; }
-      .input-area { display: flex; gap: 5px; }
-      input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; }
-      .ask-btn { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
-      .fact-item { margin-bottom: 10px; padding: 8px; background: #f8f9fa; border-left: 4px solid #e67e22; border-radius: 4px; font-size: 14px; }
-      .ai-name { color: #e67e22; font-weight: bold; }
-      .system-note { font-size: 11px; color: #7f8c8d; text-align: center; margin-top: 5px; }
+        /* UI STYLING */
+        #scan-btn {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 80px; height: 80px; background: white; border: 6px solid #3498db;
+            border-radius: 50%; z-index: 2000; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-weight: bold; font-family: sans-serif;
+        }
+        #museum-card {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; background: white; border-radius: 20px; display: none;
+            font-family: 'Segoe UI', sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 3000; overflow: hidden; border: 4px solid #f1c40f;
+        }
+        .tabs { display: flex; background: #f1c40f; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #f1c40f; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { background: white; }
+        .content { padding: 15px; height: 220px; overflow-y: auto; }
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); color: white; display: none;
+            align-items: center; justify-content: center; z-index: 4000;
+            flex-direction: column; font-family: sans-serif;
+        }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ai-msg { color: #e67e22; font-weight: bold; }
     </style>
-  </head>
-  <body>
+</head>
+<body>
 
-  <a-scene mindar-image="imageTargetSrc: ./artifacts.mind; uiLoading: no;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-    
-    <a-camera position="0 0 0" look-controls="enabled: false">
-      <a-cursor fuse="false" raycaster="objects: .clickable"></a-cursor>
-    </a-camera>
-
-    <a-entity id="target-colosseum" mindar-image-target="targetIndex: 0">
-      <a-box scale="0.4 0.4 0.4" material="color: #e74c3c; opacity: 0.6"></a-box>
-      <a-sphere class="clickable" id="btn-colosseum-sound" position="0.6 0.2 0" radius="0.12" color="#f1c40f"
-                animation="property: position; to: 0.6 0.3 0; dir: alternate; dur: 1000; loop: true">
-        <a-text value="HEAR CROWD" align="center" position="0 0.18 0" scale="0.2 0.2 0.2" color="white"></a-text>
-      </a-sphere>
-    </a-entity>
-
-    <a-entity id="target-petra" mindar-image-target="targetIndex: 3">
-      <a-box scale="0.5 0.7 0.2" material="color: #ffb6c1; opacity: 0.6"></a-box>
-      <a-sphere class="clickable" id="btn-petra-sound" position="0.6 0.2 0" radius="0.12" color="#2ecc71"
-                animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1200; loop: true">
-        <a-text value="HEAR STREETS" align="center" position="0 0.18 0" scale="0.2 0.2 0.2" color="white"></a-text>
-      </a-sphere>
-    </a-entity>
-
-  </a-scene>
-
-  <div id="museum-card">
-    <div class="tabs">
-      <button class="tab-btn active" onclick="openTab(event, 'tab-chat')">Ask AI</button>
-      <button class="tab-btn" onclick="openTab(event, 'tab-facts')">Fun Facts</button>
-      <button class="tab-btn" onclick="openTab(event, 'tab-mission')">Mission</button>
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="status-text">AI ANALYZING ARTIFACT...</div>
     </div>
 
-    <div id="tab-chat" class="content-section active">
-      <div id="chat-history">Scan an artifact to begin!</div>
-      <div class="input-area">
-        <input type="text" id="user-input" placeholder="Ask a history question...">
-        <button class="ask-btn" onclick="sendMessage()">Ask</button>
-      </div>
-      <p class="system-note">I only answer questions about history!</p>
+    <div id="scan-btn" onclick="manualScan()">SCAN</div>
+
+    <a-scene mindar-image="imageTargetSrc: ./artifacts.mind; autoStart: true; uiLoading: no;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        <a-camera position="0 0 0" look-controls="enabled: false">
+            <a-cursor fuse="false" raycaster="objects: .clickable"></a-cursor>
+        </a-camera>
+
+        <a-entity id="target-colosseum" mindar-image-target="targetIndex: 0">
+            <a-box scale="0.4 0.4 0.4" material="color: #e74c3c; opacity: 0.6"></a-box>
+            <a-sphere class="clickable" id="btn-col-sound" position="0.5 0.2 0" radius="0.12" color="#f1c40f" animation="property: position; to: 0.5 0.3 0; dir: alternate; dur: 1000; loop: true">
+                <a-text value="HEAR" align="center" position="0 0.2 0" scale="0.3 0.3 0.3"></a-text>
+            </a-sphere>
+        </a-entity>
+
+        <a-entity id="target-petra" mindar-image-target="targetIndex: 1">
+            <a-box scale="0.5 0.7 0.2" material="color: #ffb6c1; opacity: 0.6"></a-box>
+            <a-sphere class="clickable" id="btn-petra-sound" position="0.5 0.2 0" radius="0.12" color="#2ecc71" animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 800; loop: true">
+                <a-text value="STREETS" align="center" position="0 0.2 0" scale="0.3 0.3 0.3"></a-text>
+            </a-sphere>
+        </a-entity>
+    </a-scene>
+
+    <div id="museum-card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('chat')">AI Chat</button>
+            <button class="tab-btn" onclick="showTab('facts')">Facts</button>
+            <button class="tab-btn" onclick="showTab('mission')">Mission</button>
+            <button onclick="closeUI()" style="background:#e74c3c; color:white; border:none; padding:5px 10px;">X</button>
+        </div>
+        
+        <div id="chat-tab" class="content">
+            <div id="chat-history"></div>
+            <div style="display:flex; gap:5px; margin-top:10px;">
+                <input type="text" id="user-input" style="flex:1; padding:8px;" placeholder="Ask a history question...">
+                <button onclick="askAI()" style="padding:8px; background:#3498db; color:white; border:none; border-radius:5px;">Ask</button>
+            </div>
+        </div>
+
+        <div id="facts-tab" class="content" style="display:none;">
+            <div id="fact-list"></div>
+        </div>
+
+        <div id="mission-tab" class="content" style="display:none;">
+            <h4 id="mission-title">Explorer Task:</h4>
+            <p id="mission-desc"></p>
+        </div>
     </div>
 
-    <div id="tab-facts" class="content-section">
-      <div id="fact-list">Scan something to see facts!</div>
-    </div>
+    <script>
+        let isSeeing = false;
+        let activeName = "";
+        const data = {
+            "Colosseum": {
+                intro: "Ave! I am the Roman Arena. Ask me about gladiators!",
+                facts: ["I had 80 arches!", "I could be filled with water for boat battles!", "I am 1,950 years old."],
+                mission: "Count the arches in the photo. How many do you see?",
+                sound: "🔊 [SOUND ON] You hear clashing swords and 50,000 Romans cheering!"
+            },
+            "Petra": {
+                intro: "Marhaba! I am the Rose City of Jordan. Ask me how I was carved!",
+                facts: ["I am carved into pink cliffs!", "I was a secret for 100s of years!", "Camels used to carry silk through my streets."],
+                mission: "Look at the columns. Can you see where the artists used their chisels?",
+                sound: "🔊 [SOUND ON] You hear camel bells and the wind whistling through the desert canyons!"
+            }
+        };
 
-    <div id="tab-mission" class="content-section">
-      <h4 id="mission-title" style="margin:0 0 10px 0;">🕵️ Explorer Mission:</h4>
-      <p id="mission-desc">Your mission will appear here.</p>
-    </div>
-  </div>
+        // AR DETECTION
+        document.getElementById('target-colosseum').addEventListener("targetFound", () => { isSeeing = true; activeName = "Colosseum"; });
+        document.getElementById('target-colosseum').addEventListener("targetLost", () => { isSeeing = false; });
+        document.getElementById('target-petra').addEventListener("targetFound", () => { isSeeing = true; activeName = "Petra"; });
+        document.getElementById('target-petra').addEventListener("targetLost", () => { isSeeing = false; });
 
-  <script>
-    let currentArtifact = "";
-    const museumData = {
-      "Colosseum": {
-        intro: "Ave! I am the Roman Colosseum. I'm nearly 2,000 years old!",
-        facts: ["I could hold 50,000 people!", "I have 80 big arches!", "Romans used to have sea battles inside me!"],
-        mission: "Can you find a crack in the stone in your photo? That's from an earthquake long ago!"
-      },
-      "Petra": {
-        intro: "Hello! I am Petra, the Rose City. I was carved into the mountains of Jordan!",
-        facts: ["I was built over 2,000 years ago!", "I have a giant theater that holds 8,000 people!", "I was a secret city for a long time!"],
-        mission: "Look at the Treasury in your photo. Can you see the columns? They were carved from the top down!"
-      }
-    };
+        // SHUTTER CLICK
+        function manualScan() {
+            const loader = document.getElementById('loading-overlay');
+            loader.style.display = "flex";
+            setTimeout(() => {
+                loader.style.display = "none";
+                if (isSeeing) {
+                    openUI(activeName);
+                } else {
+                    alert("AI Error: No artifact detected. Get closer and try again!");
+                }
+            }, 2000);
+        }
 
-    function startDiscovery(name) {
-      if (currentArtifact === name) return;
-      currentArtifact = name;
-      document.getElementById('museum-card').style.display = "block";
-      document.getElementById('chat-history').innerHTML = `<div class="system-note">🔍 Identifying ${name}... Please wait...</div>`;
-      setTimeout(() => { updateUI(name); }, 1500);
-    }
+        function openUI(name) {
+            document.getElementById('museum-card').style.display = "block";
+            document.getElementById('scan-btn').style.display = "none";
+            document.getElementById('chat-history').innerHTML = `<span class="ai-msg">${name}:</span> "${data[name].intro}"`;
+            document.getElementById('fact-list').innerHTML = data[name].facts.map(f => `<p>• ${f}</p>`).join('');
+            document.getElementById('mission-desc').innerText = data[name].mission;
+        }
 
-    function updateUI(name) {
-      const history = document.getElementById('chat-history');
-      history.innerHTML = `<span class="ai-name">${name}:</span> "${museumData[name].intro}"`;
-      document.getElementById('fact-list').innerHTML = museumData[name].facts.map(f => `<div class="fact-item">${f}</div>`).join('');
-      document.getElementById('mission-desc').innerText = museumData[name].mission;
-    }
+        // 3D BUTTON CLICKS
+        document.getElementById('btn-col-sound').addEventListener('click', () => {
+            document.getElementById('chat-history').innerHTML = `<div style="background:#fff3cd; padding:8px; border-radius:10px;">${data["Colosseum"].sound}</div>` + document.getElementById('chat-history').innerHTML;
+        });
+        document.getElementById('btn-petra-sound').addEventListener('click', () => {
+            document.getElementById('chat-history').innerHTML = `<div style="background:#d4edda; padding:8px; border-radius:10px;">${data["Petra"].sound}</div>` + document.getElementById('chat-history').innerHTML;
+        });
 
-    // Listeners for Scanning
-    document.getElementById('target-colosseum').addEventListener("targetFound", () => startDiscovery("Colosseum"));
-    document.getElementById('target-petra').addEventListener("targetFound", () => startDiscovery("Petra"));
+        function closeUI() {
+            document.getElementById('museum-card').style.display = "none";
+            document.getElementById('scan-btn').style.display = "flex";
+        }
 
-    // Listeners for Sound Buttons
-    document.getElementById('btn-colosseum-sound').addEventListener('click', () => {
-      document.getElementById('chat-history').innerHTML = `<div style="background:#fff3cd; padding:8px; border-radius:8px; margin-bottom:5px;"><b>🔊 [ENVIRO-SOUND]</b> You hear the roar of the Roman crowd and clashing swords!</div>` + document.getElementById('chat-history').innerHTML;
-    });
+        function showTab(tab) {
+            const tabs = ['chat', 'facts', 'mission'];
+            tabs.forEach(t => document.getElementById(t + '-tab').style.display = t === tab ? 'block' : 'none');
+            const btns = document.getElementsByClassName('tab-btn');
+            for (let b of btns) b.classList.toggle('active', b.innerText.toLowerCase().includes(tab));
+        }
 
-    document.getElementById('btn-petra-sound').addEventListener('click', () => {
-      document.getElementById('chat-history').innerHTML = `<div style="background:#d4edda; padding:8px; border-radius:8px; margin-bottom:5px;"><b>🔊 [ENVIRO-SOUND]</b> You hear camel bells and the desert wind whistling through the Siq canyon!</div>` + document.getElementById('chat-history').innerHTML;
-    });
-
-    function openTab(evt, tabName) {
-      let contents = document.getElementsByClassName("content-section");
-      for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
-      let buttons = document.getElementsByClassName("tab-btn");
-      for (let i = 0; i < buttons.length; i++) buttons[i].className = buttons[i].className.replace(" active", "");
-      document.getElementById(tabName).style.display = "block";
-      evt.currentTarget.className += " active";
-    }
-
-    function sendMessage() {
-      const input = document.getElementById('user-input');
-      const msg = input.value.toLowerCase();
-      const history = document.getElementById('chat-history');
-      if(!msg) return;
-
-      const historyWords = ["who", "how", "what", "where", "when", "why", "old", "built", "stone", "king", "rome", "egypt", "jordan", "petra"];
-      const isHistory = historyWords.some(w => msg.includes(w));
-      let response = isHistory ? "That is a fascinating history question!" : "I only answer questions about history! Ask me how I was built.";
-      
-      if(msg.includes("old")) response = currentArtifact === "Colosseum" ? "I am 2,000 years old!" : "I was built around 400 BC!";
-
-      history.innerHTML = `<br><b>You:</b> ${input.value}<br><span class="ai-name">${currentArtifact}:</span> "${response}"` + history.innerHTML;
-      input.value = "";
-    }
-  </script>
-  </body>
+        function askAI() {
+            const input = document.getElementById('user-input');
+            const msg = input.value.toLowerCase();
+            const history = document.getElementById('chat-history');
+            const keywords = ["who", "how", "what", "where", "when", "old", "stone", "king", "rome", "egypt", "jordan"];
+            
+            let response = keywords.some(k => msg.includes(k)) ? "That's a great history question! I've seen many things in my long life." : "I only talk about history! Please ask about my past.";
+            if(msg.includes("old")) response = activeName === "Colosseum" ? "I am nearly 2,000 years old!" : "I was built over 2,400 years ago!";
+            
+            history.innerHTML = `<br><b>You:</b> ${input.value}<br><span class="ai-msg">${activeName}:</span> "${response}"` + history.innerHTML;
+            input.value = "";
+        }
+    </script>
+</body>
 </html>
