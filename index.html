@@ -77,12 +77,12 @@
       </div>
     </div>
 
-    <script>
+  <script>
       let currentArtifact = "";
       const museumData = {
         "Colosseum": {
           intro: "Ave! I am the Roman Colosseum. I'm nearly 2,000 years old!",
-          facts: ["I could hold 50,000 people!", "I have 80 big arches!", "Romans used to have sea battles inside me by filling me with water!"],
+          facts: ["I could hold 50,000 people!", "I have 80 big arches!", "Romans used to have sea battles inside me!"],
           mission: "Can you find a crack in the stone in your photo? That's from an earthquake long ago!"
         },
         "The Great Pyramid": {
@@ -92,6 +92,37 @@
         }
       };
 
+      // 1. SCAN AND LOCK LOGIC
+      function startDiscovery(name) {
+        if (currentArtifact === name) return; // Don't restart if already looking
+        
+        currentArtifact = name;
+        const card = document.getElementById('museum-card');
+        const history = document.getElementById('chat-history');
+        
+        // Show the card and a loading message immediately
+        card.style.display = "block";
+        history.innerHTML = `<div class="system-note">🔍 Identifying ${name}... Please wait...</div>`;
+        
+        // Wait 1.5 seconds to "Analyze" (Simulating AI loading)
+        setTimeout(() => {
+          updateUI(name);
+        }, 1500);
+      }
+
+      function updateUI(name) {
+        const history = document.getElementById('chat-history');
+        history.innerHTML = `<span class="ai-name">${name}:</span> "${museumData[name].intro}"`;
+        document.getElementById('fact-list').innerHTML = museumData[name].facts.map(f => `<div class="fact-item">${f}</div>`).join('');
+        document.getElementById('mission-desc').innerText = museumData[name].mission;
+      }
+
+      // 2. LISTENERS (We REMOVED the "targetLost" hide logic)
+      // This means once it's found, it stays on the screen!
+      document.getElementById('target-colosseum').addEventListener("targetFound", () => startDiscovery("Colosseum"));
+      document.getElementById('target-pyramid').addEventListener("targetFound", () => startDiscovery("The Great Pyramid"));
+
+      // 3. TABS & BUTTONS (Same as before)
       function openTab(evt, tabName) {
         let contents = document.getElementsByClassName("content-section");
         for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
@@ -101,69 +132,21 @@
         evt.currentTarget.className += " active";
       }
 
-      function updateUI(name) {
-        currentArtifact = name;
-        document.getElementById('museum-card').style.display = "block";
-        document.getElementById('chat-history').innerHTML = `<span class="ai-name">${name}:</span> "${museumData[name].intro}"`;
-        document.getElementById('fact-list').innerHTML = museumData[name].facts.map(f => `<div class="fact-item">${f}</div>`).join('');
-        document.getElementById('mission-desc').innerText = museumData[name].mission;
-      }
-
-      // Interaction Listeners
-      document.getElementById('target-colosseum').addEventListener("targetFound", () => updateUI("Colosseum"));
-      document.getElementById('target-pyramid').addEventListener("targetFound", () => updateUI("The Great Pyramid"));
-
-      // Clickable Button Logic
-      document.getElementById('btn-colosseum-sound').addEventListener('click', () => {
-        document.getElementById('chat-history').innerHTML = `<div style="background:#fff3cd; padding:8px; border-radius:8px; margin-bottom:5px;"><b>[SOUND ON] 🔊</b> You hear the crowd roaring: 'HOORAY! HOORAY!'</div>` + document.getElementById('chat-history').innerHTML;
-      });
-
-      document.getElementById('btn-pyramid-inside').addEventListener('click', () => {
-        document.getElementById('chat-history').innerHTML = `<div style="background:#d1ecf1; padding:8px; border-radius:8px; margin-bottom:5px;"><b>[X-RAY] 💎</b> You see the King's Chamber deep inside the stones!</div>` + document.getElementById('chat-history').innerHTML;
-      });
-
       function sendMessage() {
         const input = document.getElementById('user-input');
         const msg = input.value.toLowerCase();
         const history = document.getElementById('chat-history');
         if(!msg) return;
 
-        const historyWords = ["who", "how", "what", "where", "when", "why", "old", "built", "stone", "king", "rome", "egypt", "gladiator", "inside"];
+        const historyWords = ["who", "how", "what", "where", "when", "why", "old", "built", "stone", "king", "rome", "egypt"];
         const isHistory = historyWords.some(w => msg.includes(w));
-
-        let response = isHistory ? "That's a great question! I'm a world wonder, so I've seen a lot of history." : "I'm sorry, I only talk about history! Ask me about my stones or who built me.";
+        let response = isHistory ? "Great question!" : "Ask me about history!";
         
-        if(msg.includes("old")) response = currentArtifact === "Colosseum" ? "I am almost 2,000 years old!" : "I am over 4,500 years old!";
-        if(msg.includes("who")) response = currentArtifact === "Colosseum" ? "Emperor Vespasian started building me!" : "I was built for King Khufu!";
+        if(msg.includes("old")) response = currentArtifact === "Colosseum" ? "I'm 2,000 years old!" : "I'm 4,500 years old!";
 
         history.innerHTML = `<br><b>You:</b> ${input.value}<br><span class="ai-name">${currentArtifact}:</span> "${response}"` + history.innerHTML;
         input.value = "";
-        history.scrollTop = 0;
-      }// Colosseum Soundscape
-document.getElementById('btn-colosseum-sound').addEventListener('click', () => {
-  const history = document.getElementById('chat-history');
-  const crowdSound = `
-    <div style="background:#fff3cd; padding:10px; border-radius:10px; border:2px solid #f1c40f; margin-bottom:10px;">
-      <b>🔊 ENVIRO-SOUND: THE ARENA</b><br>
-      <i>"CLANG! SHHHHT!"</i> — That's the sound of metal swords hitting shields!<br>
-      <i>"ROOOAR!"</i> — A hungry lion just entered from a trapdoor below!<br>
-      <i>"HURRAY!"</i> — 50,000 Romans are stomping their feet on the stone seats. The whole building is shaking!
-    </div>`;
-  history.innerHTML = crowdSound + history.innerHTML;
-});
-
-// Petra Soundscape
-document.getElementById('btn-petra-sound').addEventListener('click', () => {
-  const history = document.getElementById('chat-history');
-  const petraSound = `
-    <div style="background:#d4edda; padding:10px; border-radius:10px; border:2px solid #28a745; margin-bottom:10px;">
-      <b>🔊 ENVIRO-SOUND: ANCIENT PETRA</b><br>
-      <i>"CLIP-CLOP!"</i> — Camels and horses are walking on the stone paths carrying spices and silk.<br>
-      <i>"CHINK-CHINK!"</i> — Artists are using hammers and chisels to carve giant statues into the pink cliffs.<br>
-      <i>"WHOOSH!"</i> — The wind is whistling through the narrow canyon walls (called the Siq).
-    </div>`;
-  history.innerHTML = petraSound + history.innerHTML;
-});
+      }
     </script>
   </body>
 </html>
