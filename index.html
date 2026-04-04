@@ -5,58 +5,61 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        /* THE UI LAYER - ALWAYS ON TOP */
+        /* THE UI LAYER */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999; pointer-events: none;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
         }
 
-        /* CAMERA SHUTTER BUTTON */
         #shutter-btn {
-            width: 80px; height: 80px; background: white; border: 5px solid #3498db;
-            border-radius: 50%; margin-bottom: 30px; cursor: pointer; pointer-events: auto;
+            width: 100px; height: 100px; background: #3498db; color: white; border: 6px solid white;
+            border-radius: 50%; margin-bottom: 40px; cursor: pointer; pointer-events: auto;
             display: flex; align-items: center; justify-content: center;
-            font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-weight: bold; font-size: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
 
-        /* COMMAND CENTER CARD */
         #command-center {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 450px; max-width: 90%; background: white; border-radius: 15px;
-            display: none; pointer-events: auto; border: 4px solid #f1c40f;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden;
+            width: 450px; max-width: 90%; background: white; border-radius: 20px;
+            display: none; pointer-events: auto; border: 5px solid #f1c40f;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6); overflow: hidden;
         }
 
         .tabs { display: flex; background: #f1c40f; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #f1c40f; font-weight: bold; cursor: pointer; }
-        .tab-btn.active { background: white; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: #f1c40f; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .tab-btn.active { background: white; color: #333; }
         
-        .content-area { height: 250px; overflow-y: auto; padding: 15px; background: #f9f9f9; }
-        .chat-input { display: flex; padding: 10px; border-top: 1px solid #ddd; }
-        .chat-input input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .content-area { height: 250px; overflow-y: auto; padding: 20px; background: #fdfdfd; line-height: 1.5; }
+        .chat-input { display: flex; padding: 12px; background: #eee; gap: 8px; }
+        .chat-input input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; outline: none; }
+        .chat-input button { background: #3498db; color: white; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); color: white; display: none;
-            align-items: center; justify-content: center; z-index: 10000;
+            background: rgba(0,0,0,0.85); color: white; display: none;
+            align-items: center; justify-content: center; z-index: 10000; flex-direction: column;
         }
+        .timer-text { font-size: 48px; font-weight: bold; margin-top: 10px; color: #f1c40f; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><h1 id="load-text">📸 TAKING PICTURE...</h1></div>
+    <div id="loading-overlay">
+        <h2 id="status-msg">GET READY...</h2>
+        <div id="timer-display" class="timer-text"></div>
+    </div>
 
     <div id="ui-layer">
-        <div id="shutter-btn" onclick="takePicture()">CAPTURE</div>
+        <div id="shutter-btn" onclick="startSelfTimer()">SCAN</div>
 
         <div id="command-center">
             <div class="tabs">
-                <button class="tab-btn active" onclick="openTab('chat')">AI CHAT</button>
-                <button class="tab-btn" onclick="openTab('facts')">FACTS</button>
-                <button onclick="closeUI()" style="background:red; color:white; border:none; padding:10px; cursor:pointer;">X</button>
+                <button class="tab-btn active" id="tab-chat" onclick="showTab('chat')">AI CHAT</button>
+                <button class="tab-btn" id="tab-facts" onclick="showTab('facts')">FACTS</button>
+                <button onclick="closeCommandCenter()" style="background:#e74c3c; color:white; border:none; padding:10px 15px; cursor:pointer; font-weight:bold;">X</button>
             </div>
 
             <div id="chat-tab" class="content-area">
@@ -64,84 +67,162 @@
             </div>
 
             <div id="facts-tab" class="content-area" style="display:none;">
-                <div id="fact-list"></div>
+                <ul id="fact-list" style="padding-left: 20px;"></ul>
             </div>
 
             <div class="chat-input">
                 <input type="text" id="user-input" placeholder="Ask a history question...">
-                <button onclick="askAI()" style="padding:10px; background:#3498db; color:white; border:none; cursor:pointer;">ASK</button>
+                <button onclick="askChatbot()">ASK</button>
             </div>
         </div>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./artifacts.mind; autoStart: true; uiLoading: no; uiScanning: no;" vr-mode-ui="enabled: false">
+    <a-scene mindar-image="imageTargetSrc: ./artifacts.mind; autoStart: true; uiLoading: no; uiScanning: yes; filterMinCF:0.0001; filterBeta: 0.001;" vr-mode-ui="enabled: false">
         <a-camera position="0 0 0" look-controls="enabled: false">
             <a-cursor fuse="false" raycaster="objects: .clickable"></a-cursor>
         </a-camera>
 
-        <a-entity id="target-colosseum" mindar-image-target="targetIndex: 0">
-            <a-sphere class="clickable" id="audio-col" position="0 0 0.1" radius="0.15" color="#f1c40f" 
-                      animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
-                <a-text value="HEAR CROWD" align="center" position="0 0.25 0" scale="0.4 0.4 0.4"></a-text>
+        <a-entity id="colosseum-anchor" mindar-image-target="targetIndex: 0">
+            <a-sphere class="clickable" id="btn-col-sound" position="0.6 0 0.1" radius="0.15" color="#f1c40f" animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+                <a-text value="HEAR ARENA" align="center" position="0 0.25 0" scale="0.4 0.4 0.4"></a-text>
             </a-sphere>
         </a-entity>
 
-        <a-entity id="target-petra" mindar-image-target="targetIndex: 1">
-            <a-sphere class="clickable" id="audio-petra" position="0 0 0.1" radius="0.15" color="#2ecc71"
-                      animation="property: position; to: 0 0.1 0.1; dir: alternate; dur: 1000; loop: true">
-                <a-text value="HEAR STREETS" align="center" position="0 0.25 0" scale="0.4 0.4 0.4"></a-text>
+        <a-entity id="petra-anchor" mindar-image-target="targetIndex: 1">
+            <a-sphere class="clickable" id="btn-petra-sound" position="0.6 0 0.1" radius="0.15" color="#2ecc71" animation="property: position; to: 0.6 0.1 0.1; dir: alternate; dur: 1000; loop: true">
+                <a-text value="HEAR CANYON" align="center" position="0 0.25 0" scale="0.4 0.4 0.4"></a-text>
             </a-sphere>
         </a-entity>
     </a-scene>
 
     <script>
-        let isDetected = false;
-        let artifactName = "";
-        const historyData = {
+        let isFound = false;
+        let activeArtifact = "";
+        let isFrozen = false;
+
+        const artifactData = {
             "Colosseum": {
-                facts: ["Built in 70 AD", "Held 50,000 spectators", "Used for gladiator contests"],
-                sound: "🔊 [AUDIO] The roar of 50,000 Romans and clashing swords fills the air!"
+                facts: ["It is the largest ancient amphitheatre ever built.", "It could hold between 50,000 and 80,000 spectators.", "It was used for gladiatorial contests and public spectacles."],
+                audio: "🔊 [AUDIO] You hear the thunderous roar of 50,000 Romans and the clashing of gladiator swords!"
             },
             "Petra": {
-                facts: ["Carved into rose-red cliffs", "Built by the Nabataeans", "Was a major silk trade hub"],
-                sound: "🔊 [AUDIO] You hear camel bells and desert winds whistling through the Siq canyon!"
+                facts: ["It is known as the 'Rose City' due to the color of the stone.", "It was the capital city of the Nabataean Kingdom.", "The most famous structure is Al-Khazneh (The Treasury)."],
+                audio: "🔊 [AUDIO] You hear the whistling desert wind and the distant clatter of camel bells in the Siq canyon!"
             }
         };
 
-        // TARGET TRACKING
-        document.getElementById('target-colosseum').addEventListener("targetFound", () => { isDetected = true; artifactName = "Colosseum"; });
-        document.getElementById('target-colosseum').addEventListener("targetLost", () => { isDetected = false; });
-        document.getElementById('target-petra').addEventListener("targetFound", () => { isDetected = true; artifactName = "Petra"; });
-        document.getElementById('target-petra').addEventListener("targetLost", () => { isDetected = false; });
+        // IMAGE DETECTION LOGIC
+        document.getElementById('colosseum-anchor').addEventListener("targetFound", () => { isFound = true; activeArtifact = "Colosseum"; });
+        document.getElementById('colosseum-anchor').addEventListener("targetLost", () => { isFound = false; });
+        document.getElementById('petra-anchor').addEventListener("targetFound", () => { isFound = true; activeArtifact = "Petra"; });
+        document.getElementById('petra-anchor').addEventListener("targetLost", () => { isFound = false; });
 
-        // STEP 1: THE SHUTTER
-        function takePicture() {
+        // THE SELF-TIMER AND FREEZE LOGIC
+        function startSelfTimer() {
+            if (isFrozen) return;
             const overlay = document.getElementById('loading-overlay');
-            const loadText = document.getElementById('load-text');
-            overlay.style.display = 'flex';
+            const timerText = document.getElementById('timer-display');
+            const statusMsg = document.getElementById('status-msg');
+            const sceneEl = document.querySelector('a-scene');
             
-            setTimeout(() => {
-                loadText.innerText = "🔍 SCANNING IMAGE...";
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    if(isDetected) {
-                        openCommandCenter();
-                    } else {
-                        alert("AI ERROR: No artifact found in photo. Please center the image!");
-                    }
-                }, 1500);
+            overlay.style.display = 'flex';
+            statusMsg.innerText = "HOLD STEADY...";
+            
+            let count = 3;
+            timerText.innerText = count;
+
+            const timerInterval = setInterval(() => {
+                count--;
+                timerText.innerText = count;
+
+                if (count <= 0) {
+                    clearInterval(timerInterval);
+                    
+                    // SNAP! FREEZE THE CAMERA
+                    sceneEl.pause();
+                    isFrozen = true;
+                    statusMsg.innerText = "📸 PHOTO SNAPPED!";
+                    timerText.innerText = "ANALYZING...";
+
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        if (isFound) {
+                            openCommandCenter();
+                        } else {
+                            alert("AI COULD NOT RECOGNIZE IMAGE. UNFREEZING...");
+                            resetSystem();
+                        }
+                    }, 1500);
+                }
             }, 1000);
         }
 
         function openCommandCenter() {
             document.getElementById('command-center').style.display = 'block';
             document.getElementById('shutter-btn').style.display = 'none';
-            document.getElementById('chat-history').innerHTML = `<p><b>AI:</b> Recognized: ${artifactName}. I only answer history questions about this artifact!</p>`;
-            document.getElementById('fact-list').innerHTML = historyData[artifactName].facts.map(f => `<li>${f}</li>`).join('');
+            addChatMessage("AI", `Success! I have scanned the **${activeArtifact}**. I am now connected to its history. Ask me anything!`);
+            document.getElementById('fact-list').innerHTML = artifactData[activeArtifact].facts.map(f => `<li>${f}</li>`).join('');
         }
 
-        // 3D AUDIO BUTTON LOGIC
-        document.getElementById('audio-col').addEventListener('click', () => {
-            addMessage("SYSTEM", historyData["Colosseum"].sound);
+        function resetSystem() {
+            const sceneEl = document.querySelector('a-scene');
+            document.getElementById('command-center').style.display = 'none';
+            document.getElementById('shutter-btn').style.display = 'flex';
+            sceneEl.play();
+            isFrozen = false;
+        }
+
+        function closeCommandCenter() {
+            resetSystem();
+        }
+
+        // 3D BUTTONS -> CHAT CONNECTION
+        document.getElementById('btn-col-sound').addEventListener('click', () => {
+            if(activeArtifact === "Colosseum") addChatMessage("SYSTEM", artifactData["Colosseum"].audio);
         });
-        document.getElementById('audio-petra').addEventListener('click', () => {
+        document.getElementById('btn-petra-sound').addEventListener('click', () => {
+            if(activeArtifact === "Petra") addChatMessage("SYSTEM", artifactData["Petra"].audio);
+        });
+
+        // TABS
+        function showTab(tabName) {
+            document.getElementById('chat-tab').style.display = tabName === 'chat' ? 'block' : 'none';
+            document.getElementById('facts-tab').style.display = tabName === 'facts' ? 'block' : 'none';
+            document.getElementById('tab-chat').classList.toggle('active', tabName === 'chat');
+            document.getElementById('tab-facts').classList.toggle('active', tabName === 'facts');
+        }
+
+        // CHATBOT
+        function askChatbot() {
+            const input = document.getElementById('user-input');
+            const question = input.value.trim().toLowerCase();
+            if (!question) return;
+
+            addChatMessage("You", input.value);
+            
+            const historyWords = ["who", "how", "when", "where", "old", "built", "stone", "king", "rome", "jordan", "gladiator", "age"];
+            let reply = "I only answer questions about the history of this artifact! Try asking how old it is or who built it.";
+
+            if (historyWords.some(word => question.includes(word))) {
+                if (question.includes("old") || question.includes("age")) {
+                    reply = activeArtifact === "Colosseum" ? "The Colosseum is nearly 2,000 years old! Construction started in 70 AD." : "Petra's most famous structures were carved over 2,000 years ago!";
+                } else if (question.includes("who") || question.includes("built")) {
+                    reply = activeArtifact === "Colosseum" ? "It was built by the Flavian emperors, Vespasian and Titus." : "It was built by the Nabataeans, a nomadic Arab people.";
+                } else {
+                    reply = "That's a great historical insight. My records show this artifact has survived many centuries of change!";
+                }
+            }
+
+            setTimeout(() => { addChatMessage("AI", reply); }, 500);
+            input.value = "";
+        }
+
+        function addChatMessage(sender, text) {
+            const history = document.getElementById('chat-history');
+            const color = sender === "AI" ? "#e67e22" : (sender === "SYSTEM" ? "#7f8c8d" : "#2980b9");
+            history.innerHTML += `<p><b style="color:${color}">${sender}:</b> ${text}</p>`;
+            history.scrollTop = history.scrollHeight;
+        }
+    </script>
+</body>
+</html>
