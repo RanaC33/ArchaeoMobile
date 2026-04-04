@@ -1,173 +1,186 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        
-        /* TOP STATUS BAR */
-        #debug-log {
-            position: fixed; top: 10px; left: 10px; padding: 10px;
-            background: rgba(0,0,0,0.7); color: #00ff00; font-family: monospace;
-            z-index: 10001; font-size: 12px; border-radius: 5px; pointer-events: none;
-        }
+      body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
 
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9999; pointer-events: none;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-        }
+      /* THE UI LAYER */
+      #ui-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 1000; pointer-events: none;
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      }
 
-        #shutter-btn {
-            width: 100px; height: 100px; background: #3498db; color: white; border: 6px solid white;
-            border-radius: 50%; margin-bottom: 40px; cursor: pointer; pointer-events: auto;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
+      /* SCAN BUTTON */
+      #shutter-btn {
+        width: 100px; height: 100px; background: #007bff; color: white; border: 5px solid white;
+        border-radius: 50%; margin-bottom: 40px; cursor: pointer; pointer-events: auto;
+        display: flex; align-items: center; justify-content: center; font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      }
 
-        #command-center {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 450px; max-width: 90%; background: white; border-radius: 20px;
-            display: none; pointer-events: auto; border: 5px solid #f1c40f;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6); overflow: hidden;
-        }
+      /* TIMER OVERLAY */
+      #timer-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); color: white; display: none;
+        align-items: center; justify-content: center; z-index: 2000;
+        flex-direction: column; font-size: 24px;
+      }
 
-        .tabs { display: flex; background: #f1c40f; }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: #f1c40f; font-weight: bold; cursor: pointer; }
-        .tab-btn.active { background: white; }
-        .content-area { height: 250px; overflow-y: auto; padding: 20px; background: #fdfdfd; }
-        .chat-input { display: flex; padding: 12px; background: #eee; gap: 8px; }
-        .chat-input input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
-        .chat-input button { background: #3498db; color: white; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; }
+      /* COMMAND CENTER (Chatbox & Facts) */
+      #ai-card {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        width: 85%; background: rgba(255, 255, 255, 0.95);
+        padding: 15px; border-radius: 15px; display: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1001; pointer-events: auto;
+      }
+      
+      .tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+      .tab-link { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; padding: 5px; }
+      .tab-link.active { color: #007bff; border-bottom: 2px solid #007bff; }
 
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); color: white; display: none;
-            align-items: center; justify-content: center; z-index: 10000; flex-direction: column;
-        }
+      #chat-history { height: 120px; overflow-y: auto; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #ccc; }
+      #user-input { width: 65%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+      .ai-name { font-weight: bold; color: #e67e22; }
+      #close-btn { position: absolute; top: 10px; right: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; }
     </style>
-</head>
-<body>
+  </head>
+  <body>
 
-    <div id="debug-log">System: Initializing AR...</div>
-
-    <div id="loading-overlay">
-        <h2 id="status-msg">GET READY...</h2>
-        <div id="timer-display" style="font-size: 50px; color: #f1c40f;"></div>
+    <div id="timer-overlay">
+      <div id="status-text">HOLD STEADY...</div>
+      <div id="countdown-num" style="font-size: 80px; color: #f1c40f;"></div>
     </div>
 
     <div id="ui-layer">
-        <div id="shutter-btn" onclick="startTimer()">SCAN</div>
-
-        <div id="command-center">
-            <div class="tabs">
-                <button class="tab-btn active" id="tab-chat" onclick="showTab('chat')">AI CHAT</button>
-                <button class="tab-btn" id="tab-facts" onclick="showTab('facts')">FACTS</button>
-                <button onclick="closeUI()" style="background:red; color:white; border:none; padding:10px; cursor:pointer;">X</button>
-            </div>
-            <div id="chat-tab" class="content-area">
-                <div id="chat-history"></div>
-            </div>
-            <div id="facts-tab" class="content-area" style="display:none;">
-                <ul id="fact-list"></ul>
-            </div>
-            <div class="chat-input">
-                <input type="text" id="user-input" placeholder="Ask about history...">
-                <button onclick="askAI()">ASK</button>
-            </div>
-        </div>
+      <div id="shutter-btn" onclick="startTimer()">SCAN</div>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./artifacts.mind; autoStart: true; uiLoading: no; uiScanning: yes; filterMinCF:0.00001; filterBeta: 0.0001;" vr-mode-ui="enabled: false">
-        <a-camera position="0 0 0" look-controls="enabled: false">
-            <a-cursor fuse="false" raycaster="objects: .clickable"></a-cursor>
-        </a-camera>
+    <div id="ai-card">
+      <button id="close-btn" onclick="resetApp()">X</button>
+      
+      <div class="tabs">
+        <button class="tab-link active" id="chat-tab-btn" onclick="showTab('chat')">AI CHAT</button>
+        <button class="tab-link" id="fact-tab-btn" onclick="showTab('facts')">QUICK FACTS</button>
+      </div>
 
-        <a-entity id="col-target" mindar-image-target="targetIndex: 0">
-            <a-sphere class="clickable" radius="0.1" color="yellow"></a-sphere>
-        </a-entity>
+      <div id="chat-section">
+        <div id="chat-history">
+          <span class="ai-name">History AI:</span> "Target locked. I am ready to answer your history questions!"
+        </div>
+        <input type="text" id="user-input" placeholder="Ask a question...">
+        <button onclick="sendMessage()">Ask</button>
+      </div>
 
-        <a-entity id="petra-target" mindar-image-target="targetIndex: 1">
-            <a-sphere class="clickable" radius="0.1" color="green"></a-sphere>
-        </a-entity>
+      <div id="facts-section" style="display:none; font-size: 14px; line-height: 1.4;">
+        <b>History Brief:</b>
+        <ul>
+          <li>The Colosseum (70 AD) was for gladiator games.</li>
+          <li>Petra (400 BC) was a major trade city carved in stone.</li>
+        </ul>
+      </div>
+    </div>
+
+    <a-scene mindar-image="imageTargetSrc: ./artifacts.mind; uiLoading: no;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="colosseum-target" mindar-image-target="targetIndex: 0">
+        <a-sphere radius="0.1" color="yellow" position="0 0 0.1" opacity="0.6" animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true"></a-sphere>
+        <a-text value="COLOSSEUM" align="center" position="0 0.2 0" scale="0.3 0.3 0.3" color="white"></a-text>
+      </a-entity>
+
+      <a-entity id="petra-target" mindar-image-target="targetIndex: 1">
+        <a-sphere radius="0.1" color="green" position="0 0 0.1" opacity="0.6"></a-sphere>
+        <a-text value="PETRA" align="center" position="0 0.2 0" scale="0.3 0.3 0.3" color="white"></a-text>
+      </a-entity>
     </a-scene>
 
     <script>
-        let found = false;
-        let active = "";
-        const log = document.getElementById('debug-log');
+      const aiCard = document.getElementById('ai-card');
+      const history = document.getElementById('chat-history');
+      const overlay = document.getElementById('timer-overlay');
+      const countdownNum = document.getElementById('countdown-num');
+      const sceneEl = document.querySelector('a-scene');
 
-        // Check if MindAR is actually loading the file
-        window.addEventListener("load", () => {
-            log.innerText = "System: Camera Active. Searching for artifacts.mind...";
-        });
+      let isDetected = false;
 
-        document.getElementById('col-target').addEventListener("targetFound", () => { 
-            found = true; active = "Colosseum"; 
-            log.innerText = "System: Target Found! (Colosseum)";
-        });
-        document.getElementById('col-target').addEventListener("targetLost", () => { found = false; log.innerText = "System: Target Lost."; });
-        
-        document.getElementById('petra-target').addEventListener("targetFound", () => { 
-            found = true; active = "Petra"; 
-            log.innerText = "System: Target Found! (Petra)";
-        });
-        document.getElementById('petra-target').addEventListener("targetLost", () => { found = false; log.innerText = "System: Target Lost."; });
+      // SENSOR LOGIC
+      document.getElementById('colosseum-target').addEventListener("targetFound", () => { isDetected = true; });
+      document.getElementById('colosseum-target').addEventListener("targetLost", () => { isDetected = false; });
+      document.getElementById('petra-target').addEventListener("targetFound", () => { isDetected = true; });
+      document.getElementById('petra-target').addEventListener("targetLost", () => { isDetected = false; });
 
-        function startTimer() {
-            const overlay = document.getElementById('loading-overlay');
-            const timer = document.getElementById('timer-display');
-            const scene = document.querySelector('a-scene');
-            overlay.style.display = 'flex';
-            
-            let time = 3;
-            timer.innerText = time;
+      function startTimer() {
+        overlay.style.display = "flex";
+        let timeLeft = 3;
+        countdownNum.innerText = timeLeft;
 
-            const interval = setInterval(() => {
-                time--;
-                timer.innerText = time;
-                if(time <= 0) {
-                    clearInterval(interval);
-                    scene.pause();
-                    document.getElementById('status-msg').innerText = "PHOTO CAPTURED!";
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        if(found) {
-                            document.getElementById('command-center').style.display = 'block';
-                            document.getElementById('shutter-btn').style.display = 'none';
-                            document.getElementById('chat-history').innerHTML = `<p><b>AI:</b> I see the ${active}. Ask me a history question!</p>`;
-                            document.getElementById('fact-list').innerHTML = active === "Colosseum" ? "<li>Built in 70 AD</li>" : "<li>Built in 400 BC</li>";
-                        } else {
-                            alert("AI ERROR: Image was too blurry or not found. Unfreezing...");
-                            closeUI();
-                        }
-                    }, 1000);
-                }
-            }, 1000);
+        const timerInterval = setInterval(() => {
+          timeLeft -= 1;
+          countdownNum.innerText = timeLeft;
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            captureAndFreeze();
+          }
+        }, 1000);
+      }
+
+      function captureAndFreeze() {
+        sceneEl.pause(); // FREEZE CAMERA
+        overlay.style.display = "none";
+
+        if (isDetected) {
+          aiCard.style.display = "block";
+          document.getElementById('shutter-btn').style.display = "none";
+        } else {
+          alert("Nothing detected! Hold the paper flat and try again.");
+          resetApp();
+        }
+      }
+
+      function resetApp() {
+        sceneEl.play(); // UNFREEZE
+        aiCard.style.display = "none";
+        document.getElementById('shutter-btn').style.display = "flex";
+      }
+
+      function showTab(tab) {
+        if(tab === 'chat') {
+          document.getElementById('chat-section').style.display = "block";
+          document.getElementById('facts-section').style.display = "none";
+          document.getElementById('chat-tab-btn').className = "tab-link active";
+          document.getElementById('fact-tab-btn').className = "tab-link";
+        } else {
+          document.getElementById('chat-section').style.display = "none";
+          document.getElementById('facts-section').style.display = "block";
+          document.getElementById('chat-tab-btn').className = "tab-link";
+          document.getElementById('fact-tab-btn').className = "tab-link active";
+        }
+      }
+
+      function sendMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value.toLowerCase();
+        if(!text) return;
+
+        // CENSORSHIP / HISTORY FILTER
+        const historyWords = ["who", "how", "when", "built", "old", "rome", "jordan", "stone", "gladiator", "age"];
+        let response = "I am a History AI. I only answer questions about the past of these artifacts!";
+
+        if(historyWords.some(word => text.includes(word))) {
+           if(text.includes("how many")) response = "It could hold over 50,000 people!";
+           else if(text.includes("gladiator")) response = "Gladiators were professional fighters in ancient Rome.";
+           else if(text.includes("old")) response = "These structures are over 2,000 years old!";
+           else response = "That is a fascinating part of history! They were architectural wonders of the ancient world.";
         }
 
-        function closeUI() {
-            document.querySelector('a-scene').play();
-            document.getElementById('command-center').style.display = 'none';
-            document.getElementById('shutter-btn').style.display = 'flex';
-            document.getElementById('status-msg').innerText = "GET READY...";
-        }
-
-        function showTab(t) {
-            document.getElementById('chat-tab').style.display = t === 'chat' ? 'block' : 'none';
-            document.getElementById('facts-tab').style.display = t === 'facts' ? 'block' : 'none';
-        }
-
-        function askAI() {
-            const input = document.getElementById('user-input');
-            const history = document.getElementById('chat-history');
-            let reply = "I only answer history questions!";
-            if(input.value.toLowerCase().includes("old")) reply = "Over 2,000 years old!";
-            history.innerHTML += `<p><b>You:</b> ${input.value}</p><p><b>AI:</b> ${reply}</p>`;
-            input.value = "";
-        }
+        history.innerHTML += `<br><br><b>You:</b> ${input.value}<br><span class="ai-name">AI:</span> "${response}"`;
+        input.value = "";
+        history.scrollTop = history.scrollHeight;
+      }
     </script>
-</body>
+  </body>
 </html>
