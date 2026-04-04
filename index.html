@@ -29,127 +29,59 @@
   <body>
 
   <a-scene mindar-image="imageTargetSrc: ./artifacts.mind; uiLoading: no;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-  
-  <a-camera position="0 0 0" look-controls="enabled: false">
-    <a-cursor fuse="false" raycaster="objects: .clickable"></a-cursor>
-  </a-camera>
+    
+    <a-camera position="0 0 0" look-controls="enabled: false">
+      <a-cursor fuse="false" raycaster="objects: .clickable"></a-cursor>
+    </a-camera>
 
-  <a-entity id="target-colosseum" mindar-image-target="targetIndex: 0">
-    <a-box scale="0.4 0.4 0.4" material="color: #e74c3c; opacity: 0.6"></a-box>
-    <a-sphere class="clickable" id="btn-colosseum-sound" position="0.6 0.2 0" radius="0.12" color="#f1c40f"
-              animation="property: position; to: 0.6 0.3 0; dir: alternate; dur: 1000; loop: true">
-      <a-text value="HEAR CROWD" align="center" position="0 0.18 0" scale="0.2 0.2 0.2" color="white"></a-text>
-    </a-sphere>
-  </a-entity>
+    <a-entity id="target-colosseum" mindar-image-target="targetIndex: 0">
+      <a-box scale="0.4 0.4 0.4" material="color: #e74c3c; opacity: 0.6"></a-box>
+      <a-sphere class="clickable" id="btn-colosseum-sound" position="0.6 0.2 0" radius="0.12" color="#f1c40f"
+                animation="property: position; to: 0.6 0.3 0; dir: alternate; dur: 1000; loop: true">
+        <a-text value="HEAR CROWD" align="center" position="0 0.18 0" scale="0.2 0.2 0.2" color="white"></a-text>
+      </a-sphere>
+    </a-entity>
 
-  <a-entity id="target-petra" mindar-image-target="targetIndex: 3">
-    <a-box scale="0.5 0.7 0.2" material="color: #ffb6c1; opacity: 0.6"></a-box>
-    <a-sphere class="clickable" id="btn-petra-sound" position="0.6 0.2 0" radius="0.12" color="#2ecc71"
-              animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1200; loop: true">
-      <a-text value="HEAR STREETS" align="center" position="0 0.18 0" scale="0.2 0.2 0.2" color="white"></a-text>
-    </a-sphere>
-  </a-entity>
+    <a-entity id="target-petra" mindar-image-target="targetIndex: 3">
+      <a-box scale="0.5 0.7 0.2" material="color: #ffb6c1; opacity: 0.6"></a-box>
+      <a-sphere class="clickable" id="btn-petra-sound" position="0.6 0.2 0" radius="0.12" color="#2ecc71"
+                animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1200; loop: true">
+        <a-text value="HEAR STREETS" align="center" position="0 0.18 0" scale="0.2 0.2 0.2" color="white"></a-text>
+      </a-sphere>
+    </a-entity>
 
   </a-scene>
-    <div id="museum-card">
-      <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'tab-chat')">Ask AI</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-facts')">Fun Facts</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-mission')">Mission</button>
-      </div>
 
-      <div id="tab-chat" class="content-section active">
-        <div id="chat-history">Scan an artifact to begin!</div>
-        <div class="input-area">
-          <input type="text" id="user-input" placeholder="Ask a history question...">
-          <button class="ask-btn" onclick="sendMessage()">Ask</button>
-        </div>
-        <p class="system-note">I only answer questions about history!</p>
-      </div>
-
-      <div id="tab-facts" class="content-section">
-        <div id="fact-list">Scan something to see facts!</div>
-      </div>
-
-      <div id="tab-mission" class="content-section">
-        <h4 id="mission-title" style="margin:0 0 10px 0;">🕵️ Explorer Mission:</h4>
-        <p id="mission-desc">Your mission will appear here.</p>
-      </div>
+  <div id="museum-card">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab(event, 'tab-chat')">Ask AI</button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-facts')">Fun Facts</button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-mission')">Mission</button>
     </div>
 
+    <div id="tab-chat" class="content-section active">
+      <div id="chat-history">Scan an artifact to begin!</div>
+      <div class="input-area">
+        <input type="text" id="user-input" placeholder="Ask a history question...">
+        <button class="ask-btn" onclick="sendMessage()">Ask</button>
+      </div>
+      <p class="system-note">I only answer questions about history!</p>
+    </div>
+
+    <div id="tab-facts" class="content-section">
+      <div id="fact-list">Scan something to see facts!</div>
+    </div>
+
+    <div id="tab-mission" class="content-section">
+      <h4 id="mission-title" style="margin:0 0 10px 0;">🕵️ Explorer Mission:</h4>
+      <p id="mission-desc">Your mission will appear here.</p>
+    </div>
+  </div>
+
   <script>
-      let currentArtifact = "";
-      const museumData = {
-        "Colosseum": {
-          intro: "Ave! I am the Roman Colosseum. I'm nearly 2,000 years old!",
-          facts: ["I could hold 50,000 people!", "I have 80 big arches!", "Romans used to have sea battles inside me!"],
-          mission: "Can you find a crack in the stone in your photo? That's from an earthquake long ago!"
-        },
-        "The Great Pyramid": {
-          intro: "Greetings! I am the Great Pyramid of Giza. I was the tallest building for a long time!",
-          facts: ["I am made of 2.3 million stones!", "It took 20 years to build me!", "I point almost exactly North!"],
-          mission: "Look at the photo. Are the stones all the same size? Imagine trying to lift one!"
-        }
-      };
-
-      // 1. SCAN AND LOCK LOGIC
-      function startDiscovery(name) {
-        if (currentArtifact === name) return; // Don't restart if already looking
-        
-        currentArtifact = name;
-        const card = document.getElementById('museum-card');
-        const history = document.getElementById('chat-history');
-        
-        // Show the card and a loading message immediately
-        card.style.display = "block";
-        history.innerHTML = `<div class="system-note">🔍 Identifying ${name}... Please wait...</div>`;
-        
-        // Wait 1.5 seconds to "Analyze" (Simulating AI loading)
-        setTimeout(() => {
-          updateUI(name);
-        }, 1500);
-      }
-
-      function updateUI(name) {
-        const history = document.getElementById('chat-history');
-        history.innerHTML = `<span class="ai-name">${name}:</span> "${museumData[name].intro}"`;
-        document.getElementById('fact-list').innerHTML = museumData[name].facts.map(f => `<div class="fact-item">${f}</div>`).join('');
-        document.getElementById('mission-desc').innerText = museumData[name].mission;
-      }
-
-      // 2. LISTENERS (We REMOVED the "targetLost" hide logic)
-      // This means once it's found, it stays on the screen!
-      document.getElementById('target-colosseum').addEventListener("targetFound", () => startDiscovery("Colosseum"));
-      document.getElementById('target-pyramid').addEventListener("targetFound", () => startDiscovery("The Great Pyramid"));
-
-      // 3. TABS & BUTTONS (Same as before)
-      function openTab(evt, tabName) {
-        let contents = document.getElementsByClassName("content-section");
-        for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
-        let buttons = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < buttons.length; i++) buttons[i].className = buttons[i].className.replace(" active", "");
-        document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
-      }
-
-      function sendMessage() {
-        const input = document.getElementById('user-input');
-        const msg = input.value.toLowerCase();
-        const history = document.getElementById('chat-history');
-        if(!msg) return;
-
-        const historyWords = ["who", "how", "what", "where", "when", "why", "old", "built", "stone", "king", "rome", "egypt"];
-        const isHistory = historyWords.some(w => msg.includes(w));
-        let response = isHistory ? "Great question!" : "Ask me about history!";
-        
-        if(msg.includes("old")) response = currentArtifact === "Colosseum" ? "I'm 2,000 years old!" : "I'm 4,500 years old!";
-
-        history.innerHTML = `<br><b>You:</b> ${input.value}<br><span class="ai-name">${currentArtifact}:</span> "${response}"` + history.innerHTML;
-        input.value = "";
-      }
-    </script>
-  </body>
-</html>
-    </script>
-  </body>
-</html>
+    let currentArtifact = "";
+    const museumData = {
+      "Colosseum": {
+        intro: "Ave! I am the Roman Colosseum. I'm nearly 2,000 years old!",
+        facts: ["I could hold 50,000 people!", "I have 80 big arches!", "Romans used to have sea battles inside me!"],
+        mission: "Can you find
