@@ -84,4 +84,67 @@
       "Colosseum": {
         intro: "Ave! I am the Roman Colosseum. I'm nearly 2,000 years old!",
         facts: ["I could hold 50,000 people!", "I have 80 big arches!", "Romans used to have sea battles inside me!"],
-        mission: "Can you find
+        mission: "Can you find a crack in the stone in your photo? That's from an earthquake long ago!"
+      },
+      "Petra": {
+        intro: "Hello! I am Petra, the Rose City. I was carved into the mountains of Jordan!",
+        facts: ["I was built over 2,000 years ago!", "I have a giant theater that holds 8,000 people!", "I was a secret city for a long time!"],
+        mission: "Look at the Treasury in your photo. Can you see the columns? They were carved from the top down!"
+      }
+    };
+
+    function startDiscovery(name) {
+      if (currentArtifact === name) return;
+      currentArtifact = name;
+      document.getElementById('museum-card').style.display = "block";
+      document.getElementById('chat-history').innerHTML = `<div class="system-note">🔍 Identifying ${name}... Please wait...</div>`;
+      setTimeout(() => { updateUI(name); }, 1500);
+    }
+
+    function updateUI(name) {
+      const history = document.getElementById('chat-history');
+      history.innerHTML = `<span class="ai-name">${name}:</span> "${museumData[name].intro}"`;
+      document.getElementById('fact-list').innerHTML = museumData[name].facts.map(f => `<div class="fact-item">${f}</div>`).join('');
+      document.getElementById('mission-desc').innerText = museumData[name].mission;
+    }
+
+    // Listeners for Scanning
+    document.getElementById('target-colosseum').addEventListener("targetFound", () => startDiscovery("Colosseum"));
+    document.getElementById('target-petra').addEventListener("targetFound", () => startDiscovery("Petra"));
+
+    // Listeners for Sound Buttons
+    document.getElementById('btn-colosseum-sound').addEventListener('click', () => {
+      document.getElementById('chat-history').innerHTML = `<div style="background:#fff3cd; padding:8px; border-radius:8px; margin-bottom:5px;"><b>🔊 [ENVIRO-SOUND]</b> You hear the roar of the Roman crowd and clashing swords!</div>` + document.getElementById('chat-history').innerHTML;
+    });
+
+    document.getElementById('btn-petra-sound').addEventListener('click', () => {
+      document.getElementById('chat-history').innerHTML = `<div style="background:#d4edda; padding:8px; border-radius:8px; margin-bottom:5px;"><b>🔊 [ENVIRO-SOUND]</b> You hear camel bells and the desert wind whistling through the Siq canyon!</div>` + document.getElementById('chat-history').innerHTML;
+    });
+
+    function openTab(evt, tabName) {
+      let contents = document.getElementsByClassName("content-section");
+      for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
+      let buttons = document.getElementsByClassName("tab-btn");
+      for (let i = 0; i < buttons.length; i++) buttons[i].className = buttons[i].className.replace(" active", "");
+      document.getElementById(tabName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('user-input');
+      const msg = input.value.toLowerCase();
+      const history = document.getElementById('chat-history');
+      if(!msg) return;
+
+      const historyWords = ["who", "how", "what", "where", "when", "why", "old", "built", "stone", "king", "rome", "egypt", "jordan", "petra"];
+      const isHistory = historyWords.some(w => msg.includes(w));
+      let response = isHistory ? "That is a fascinating history question!" : "I only answer questions about history! Ask me how I was built.";
+      
+      if(msg.includes("old")) response = currentArtifact === "Colosseum" ? "I am 2,000 years old!" : "I was built around 400 BC!";
+
+      history.innerHTML = `<br><b>You:</b> ${input.value}<br><span class="ai-name">${currentArtifact}:</span> "${response}"` + history.innerHTML;
+      input.value = "";
+    }
+  </script>
+  </body>
+</html>
