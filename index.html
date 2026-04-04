@@ -7,27 +7,45 @@
     <style>
         /* UI STYLING */
         #scan-btn {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 80px; height: 80px; background: white; border: 6px solid #3498db;
-            border-radius: 50%; z-index: 2000; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; font-weight: bold; font-family: sans-serif;
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            width: 80px; 
+            height: 80px; 
+            background: white; 
+            border: 6px solid #3498db;
+            border-radius: 50%; 
+            z-index: 9999; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-family: sans-serif;
+            color: black;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
         }
+
         #museum-card {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: white; border-radius: 20px; display: none;
             font-family: 'Segoe UI', sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             z-index: 3000; overflow: hidden; border: 4px solid #f1c40f;
         }
+
         .tabs { display: flex; background: #f1c40f; }
         .tab-btn { flex: 1; padding: 12px; border: none; background: #f1c40f; font-weight: bold; cursor: pointer; }
         .tab-btn.active { background: white; }
         .content { padding: 15px; height: 220px; overflow-y: auto; }
+
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); color: white; display: none;
             align-items: center; justify-content: center; z-index: 4000;
             flex-direction: column; font-family: sans-serif;
         }
+
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .ai-msg { color: #e67e22; font-weight: bold; }
@@ -106,13 +124,11 @@
             }
         };
 
-        // AR DETECTION
         document.getElementById('target-colosseum').addEventListener("targetFound", () => { isSeeing = true; activeName = "Colosseum"; });
         document.getElementById('target-colosseum').addEventListener("targetLost", () => { isSeeing = false; });
         document.getElementById('target-petra').addEventListener("targetFound", () => { isSeeing = true; activeName = "Petra"; });
         document.getElementById('target-petra').addEventListener("targetLost", () => { isSeeing = false; });
 
-        // SHUTTER CLICK
         function manualScan() {
             const loader = document.getElementById('loading-overlay');
             loader.style.display = "flex";
@@ -134,12 +150,11 @@
             document.getElementById('mission-desc').innerText = data[name].mission;
         }
 
-        // 3D BUTTON CLICKS
         document.getElementById('btn-col-sound').addEventListener('click', () => {
-            document.getElementById('chat-history').innerHTML = `<div style="background:#fff3cd; padding:8px; border-radius:10px;">${data["Colosseum"].sound}</div>` + document.getElementById('chat-history').innerHTML;
+            document.getElementById('chat-history').innerHTML = `<div style="background:#fff3cd; padding:8px; border-radius:10px; margin-bottom:5px;">${data["Colosseum"].sound}</div>` + document.getElementById('chat-history').innerHTML;
         });
         document.getElementById('btn-petra-sound').addEventListener('click', () => {
-            document.getElementById('chat-history').innerHTML = `<div style="background:#d4edda; padding:8px; border-radius:10px;">${data["Petra"].sound}</div>` + document.getElementById('chat-history').innerHTML;
+            document.getElementById('chat-history').innerHTML = `<div style="background:#d4edda; padding:8px; border-radius:10px; margin-bottom:5px;">${data["Petra"].sound}</div>` + document.getElementById('chat-history').innerHTML;
         });
 
         function closeUI() {
