@@ -5,50 +5,24 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-      body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-      #ui-layer {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        z-index: 1000; pointer-events: none;
-        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-      }
-
-      #shutter-btn {
-        width: 100px; height: 100px; background: #007bff; color: white; border: 5px solid white;
-        border-radius: 50%; margin-bottom: 40px; cursor: pointer; pointer-events: auto;
-        display: flex; align-items: center; justify-content: center; font-weight: bold;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      }
-
-      #timer-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85); color: white; display: none;
-        align-items: center; justify-content: center; z-index: 2000;
-        flex-direction: column; font-size: 24px;
-      }
-
-      #ai-card {
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        width: 85%; max-width: 450px; background: white;
-        padding: 15px; border-radius: 15px; display: none;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.5); z-index: 1001; pointer-events: auto;
-      }
-      
-      .tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #ddd; }
-      .tab-link { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; padding: 10px; }
-      .tab-link.active { color: #007bff; border-bottom: 3px solid #007bff; }
-
-      #chat-history { height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #eee; padding: 5px; }
-      #user-input { width: 70%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+      body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
+      #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+      #shutter-btn { width: 100px; height: 100px; background: #007bff; color: white; border: 5px solid white; border-radius: 50%; margin-bottom: 40px; cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+      #timer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: none; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; font-size: 24px; }
+      #ai-card { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; background: white; padding: 15px; border-radius: 15px; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1001; pointer-events: auto; border: 3px solid #e67e22; }
+      .tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+      .tab-link { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; padding: 5px; }
+      .tab-link.active { color: #007bff; border-bottom: 2px solid #007bff; }
+      #chat-history { height: 130px; overflow-y: auto; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #ccc; padding: 5px; }
+      #user-input { width: 65%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
       .ai-name { font-weight: bold; color: #e67e22; }
-      .user-label { font-weight: bold; color: #2980b9; }
-      #close-btn { position: absolute; top: 10px; right: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold;}
+      #close-btn { position: absolute; top: 10px; right: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; }
     </style>
   </head>
   <body>
 
     <div id="timer-overlay">
-      <div id="status-text">HOLD STEADY... SCANNING ARTIFACT</div>
+      <div id="status-text">ANALYZING ARTIFACT...</div>
       <div id="countdown-num" style="font-size: 80px; color: #f1c40f;"></div>
     </div>
 
@@ -58,25 +32,19 @@
 
     <div id="ai-card">
       <button id="close-btn" onclick="resetApp()">X</button>
-      
       <div class="tabs">
-        <button class="tab-link active" id="chat-tab-btn" onclick="showTab('chat')">HISTORY AI</button>
+        <button class="tab-link active" id="chat-tab-btn" onclick="showTab('chat')">AI CHAT</button>
         <button class="tab-link" id="fact-tab-btn" onclick="showTab('facts')">QUICK FACTS</button>
       </div>
 
       <div id="chat-section">
-        <div id="chat-history">
-          <span class="ai-name">History AI:</span> "I am connected to the database. Ask me about gladiators, how I was built, or how old I am!"
-        </div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="user-input" placeholder="Ask a history question...">
-            <button onclick="sendMessage()" style="flex:1; background:#007bff; color:white; border:none; border-radius:8px; cursor:pointer;">ASK</button>
-        </div>
+        <div id="chat-history"><span class="ai-name">AI:</span> "I am locked on. Ask me about this location!"</div>
+        <input type="text" id="user-input" placeholder="Ask a history question...">
+        <button onclick="sendMessage()" style="padding:10px; background:#007bff; color:white; border:none; border-radius:8px;">Ask</button>
       </div>
 
-      <div id="facts-section" style="display:none; font-size: 14px; line-height: 1.6; color: #333;">
-        <b>📜 Colosseum:</b> Built in 70-80 AD. It could hold 50,000 spectators and had 80 entrances!<br><br>
-        <b>🏜️ Petra:</b> Built around 400 BC. It was famous for its water conduit system and buildings carved directly into red rock.
+      <div id="facts-section" style="display:none; font-size: 14px; line-height: 1.5;">
+        <div id="dynamic-facts">Waiting for scan...</div>
       </div>
     </div>
 
@@ -84,54 +52,63 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity id="colosseum-target" mindar-image-target="targetIndex: 0">
-        <a-sphere radius="0.1" color="yellow" position="0 0 0.1" opacity="0.6" animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true"></a-sphere>
-        <a-text value="COLOSSEUM" align="center" position="0 0.25 0" scale="0.4 0.4 0.4" color="white"></a-text>
+        <a-sphere radius="0.1" color="yellow" position="0 0 0.1" opacity="0.5"></a-sphere>
       </a-entity>
 
       <a-entity id="petra-target" mindar-image-target="targetIndex: 1">
-        <a-sphere radius="0.1" color="green" position="0 0 0.1" opacity="0.6"></a-sphere>
-        <a-text value="PETRA" align="center" position="0 0.25 0" scale="0.4 0.4 0.4" color="white"></a-text>
+        <a-sphere radius="0.1" color="green" position="0 0 0.1" opacity="0.5"></a-sphere>
       </a-entity>
     </a-scene>
 
     <script>
       const aiCard = document.getElementById('ai-card');
-      const historyBox = document.getElementById('chat-history');
+      const history = document.getElementById('chat-history');
       const overlay = document.getElementById('timer-overlay');
       const countdownNum = document.getElementById('countdown-num');
+      const dynamicFacts = document.getElementById('dynamic-facts');
       const sceneEl = document.querySelector('a-scene');
 
-      let isDetected = false;
+      let currentTarget = ""; // Tracks which one we found
 
-      // TRACKER
-      document.getElementById('colosseum-target').addEventListener("targetFound", () => { isDetected = true; });
-      document.getElementById('colosseum-target').addEventListener("targetLost", () => { isDetected = false; });
-      document.getElementById('petra-target').addEventListener("targetFound", () => { isDetected = true; });
-      document.getElementById('petra-target').addEventListener("targetLost", () => { isDetected = false; });
+      // SENSORS
+      document.getElementById('colosseum-target').addEventListener("targetFound", () => { currentTarget = "colosseum"; });
+      document.getElementById('petra-target').addEventListener("targetFound", () => { currentTarget = "petra"; });
+      
+      document.getElementById('colosseum-target').addEventListener("targetLost", () => { if(sceneEl.isPlaying) currentTarget = ""; });
+      document.getElementById('petra-target').addEventListener("targetLost", () => { if(sceneEl.isPlaying) currentTarget = ""; });
 
       function startTimer() {
         overlay.style.display = "flex";
         let timeLeft = 3;
         countdownNum.innerText = timeLeft;
         const timerInterval = setInterval(() => {
-          timeLeft -= 1;
+          timeLeft--;
           countdownNum.innerText = timeLeft;
           if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            captureAndFreeze();
+            capture();
           }
         }, 1000);
       }
 
-      function captureAndFreeze() {
+      function capture() {
         sceneEl.pause();
         overlay.style.display = "none";
-        if (isDetected) {
+        if (currentTarget !== "") {
           aiCard.style.display = "block";
           document.getElementById('shutter-btn').style.display = "none";
+          updateFacts();
         } else {
-          alert("I can't see the artifact! Hold the paper flat and try again.");
+          alert("Nothing found! Hold the paper closer.");
           resetApp();
+        }
+      }
+
+      function updateFacts() {
+        if(currentTarget === "colosseum") {
+          dynamicFacts.innerHTML = "<b>The Colosseum:</b><br>• Located in Rome, Italy.<br>• Built in 70 AD.<br>• It had 80 arched entrances.<br>• It could be flooded for sea battles!";
+        } else {
+          dynamicFacts.innerHTML = "<b>Petra:</b><br>• Located in Ma'an, Jordan.<br>• Built around 400 BC.<br>• Known as the 'Rose City'.<br>• Carved directly into pink sandstone.";
         }
       }
 
@@ -148,38 +125,31 @@
         document.getElementById('fact-tab-btn').className = tab === 'facts' ? "tab-link active" : "tab-link";
       }
 
-      // THE SMART BRAIN
       function sendMessage() {
         const input = document.getElementById('user-input');
-        const text = input.value.toLowerCase();
-        if(!text) return;
+        const q = input.value.toLowerCase();
+        let a = "I only answer history questions about the Colosseum or Petra!";
 
-        let response = "I'm not sure about that. I am specialized in the Colosseum and Petra! Try asking about gladiators, the Emperor, or how the buildings were carved.";
-
-        // THE KNOWLEDGE BASE
-        if(text.includes("how many") || text.includes("people") || text.includes("fit")) {
-            response = "The Colosseum could hold 50,000 to 80,000 people! That's as big as many pro football stadiums today.";
-        } else if(text.includes("gladiator") || text.includes("fight") || text.includes("battle")) {
-            response = "Gladiators were often enslaved people or criminals, but some were volunteers! They fought to provide 'bread and circus' (entertainment) for Rome.";
-        } else if(text.includes("old") || text.includes("age") || text.includes("year")) {
-            response = "The Colosseum is about 1,950 years old. Petra is even older—parts of it date back over 2,300 years!";
-        } else if(text.includes("who built") || text.includes("emperor") || text.includes("vespasian")) {
-            response = "The Emperor Vespasian started the Colosseum in 72 AD. It was finished by his son, Titus.";
-        } else if(text.includes("petra") || text.includes("jordan") || text.includes("carved")) {
-            response = "Petra was carved directly into pink sandstone cliffs by the Nabataeans. It's famous for 'The Treasury' building!";
-        } else if(text.includes("stone") || text.includes("material") || text.includes("made of")) {
-            response = "The Colosseum was made of travertine limestone and concrete. Petra was carved right into the natural rock of the canyon.";
-        } else if(text.includes("water") || text.includes("flood")) {
-            response = "Fun fact: The Romans could actually flood the Colosseum floor to have fake naval battles with real ships!";
-        } else if(text.includes("hello") || text.includes("hi")) {
-            response = "Ave! (That's 'Hello' in Latin). Ask me a history question!";
+        // COLOSSEUM BRAIN
+        if(currentTarget === "colosseum") {
+          if(q.includes("where")) a = "The Colosseum is in the center of Rome, Italy!";
+          else if(q.includes("when") || q.includes("built")) a = "Construction started in 70 AD and finished in 80 AD.";
+          else if(q.includes("gladiator") && q.includes("play")) a = "Gladiators fought in the 'Arena'—the floor was covered in sand to soak up blood!";
+          else if(q.includes("how many") || q.includes("people")) a = "It could hold between 50,000 and 80,000 spectators.";
+          else if(q.includes("who built")) a = "Emperor Vespasian started it, and his son Titus finished it.";
+        } 
+        
+        // PETRA BRAIN
+        else if(currentTarget === "petra") {
+          if(q.includes("where")) a = "Petra is located in the southern part of Jordan.";
+          else if(q.includes("when") || q.includes("built")) a = "It was established as early as the 4th century BC (around 400 BC).";
+          else if(q.includes("why") || q.includes("pink") || q.includes("rose")) a = "It's called the Rose City because the stone it's carved from is pink sandstone!";
+          else if(q.includes("who")) a = "It was built by the Nabataean people, who were expert water engineers.";
         }
 
-        historyBox.innerHTML += `<div style="margin-top:10px;"><span class="user-label">You:</span> ${input.value}</div>`;
-        historyBox.innerHTML += `<div><span class="ai-name">AI:</span> "${response}"</div>`;
-        
+        history.innerHTML += `<br><b>You:</b> ${input.value}<br><span class="ai-name">AI:</span> "${a}"`;
         input.value = "";
-        historyBox.scrollTop = historyBox.scrollHeight;
+        history.scrollTop = history.scrollHeight;
       }
     </script>
   </body>
